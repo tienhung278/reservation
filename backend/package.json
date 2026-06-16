@@ -6,13 +6,13 @@
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
-    "build": "nest build",
-    "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
-    "start": "nest start",
-    "start:dev": "nest start --watch",
-    "start:debug": "nest start --debug --watch",
-    "start:prod": "node dist/main",
-    "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
+    "build": "tsc -p tsconfig.build.json",
+    "format": "prettier --write \"apps/**/*.ts\" \"packages/**/*.ts\" \"test/**/*.ts\"",
+    "start:gateway": "node dist/apps/api-gateway/src/main.js",
+    "start:auth": "node dist/apps/auth-service/src/main.js",
+    "start:seat": "node dist/apps/seat-service/src/main.js",
+    "start:payment": "node dist/apps/payment-service/src/main.js",
+    "lint": "eslint \"{apps,packages,test}/**/*.ts\"",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
@@ -23,7 +23,9 @@
     "@nestjs/common": "^11.0.1",
     "@nestjs/core": "^11.0.1",
     "@nestjs/platform-express": "^11.0.1",
-    "drizzle-orm": "^0.45.2",
+    "amqplib": "^2.0.1",
+    "argon2": "^0.44.0",
+    "pg": "^8.21.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1"
   },
@@ -33,9 +35,11 @@
     "@nestjs/cli": "^11.0.0",
     "@nestjs/schematics": "^11.0.0",
     "@nestjs/testing": "^11.0.1",
+    "@types/amqplib": "^0.10.8",
     "@types/express": "^5.0.0",
     "@types/jest": "^30.0.0",
     "@types/node": "^24.0.0",
+    "@types/pg": "^8.20.0",
     "@types/supertest": "^7.0.0",
     "eslint": "^9.18.0",
     "eslint-config-prettier": "^10.0.1",
@@ -58,13 +62,14 @@
       "json",
       "ts"
     ],
-    "rootDir": "src",
-    "testRegex": ".*\\.spec\\.ts$",
+    "rootDir": ".",
+    "testRegex": ".*\\.(spec|e2e-spec)\\.ts$",
     "transform": {
       "^.+\\.(t|j)s$": "ts-jest"
     },
     "collectCoverageFrom": [
-      "**/*.(t|j)s"
+      "apps/**/*.ts",
+      "packages/**/*.ts"
     ],
     "coverageDirectory": "../coverage",
     "testEnvironment": "node"

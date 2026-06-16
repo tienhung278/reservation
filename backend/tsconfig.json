@@ -16,10 +16,10 @@
     "baseUrl": "./",
     "incremental": true,
     "skipLibCheck": true,
-    "strictNullChecks": true,
+    "strict": true,
     "forceConsistentCasingInFileNames": true,
-    "noImplicitAny": false,
-    "strictBindCallApply": false,
     "noFallthroughCasesInSwitch": false
-  }
+  },
+  "include": ["apps/**/*.ts", "packages/**/*.ts", "test/**/*.ts"],
+  "exclude": ["node_modules", "dist", "coverage", "src"]
 }
