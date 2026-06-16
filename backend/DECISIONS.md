@@ -10,7 +10,9 @@ The frontend already expects a single `/api/*` origin. The gateway preserves tho
 
 ## 3. Postgres Ownership
 
-One Postgres deployment is used for local assessment simplicity, with service-owned schemas: `auth`, `seat`, `payment`, and `eventing`. This keeps ownership visible while avoiding the operational overhead of three local database containers. Production can split schemas into separate databases without changing the public API.
+Each domain service has a dedicated Postgres deployment in local Compose: `auth-postgres`, `seat-postgres`, and `payment-postgres`. The services still use schema-qualified names (`auth.*`, `seat.*`, `payment.*`) inside their own databases so ownership stays visible without rewriting repository SQL. The gateway remains database-free.
+
+`eventing.*` is local infrastructure inside event-driven service databases. Seat and payment each keep their own `eventing.outbox` and `eventing.inbox`, so business updates, outbox appends, and consumer idempotency records commit atomically with that service's domain tables. Auth currently has no RabbitMQ/outbox tables.
 
 ## 4. Seat Locking Strategy
 

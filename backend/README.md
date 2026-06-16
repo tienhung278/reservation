@@ -17,7 +17,9 @@ backend/
   infra/
     docker-compose.yml
     nginx/nginx.conf
-    postgres/migrations/001_init.sql
+    postgres/auth/migrations/001_init.sql
+    postgres/seat/migrations/001_init.sql
+    postgres/payment/migrations/001_init.sql
     postgres/postgresql.conf
 ```
 
@@ -41,6 +43,10 @@ docker compose -f infra/docker-compose.yml --env-file .env up --build
 ```
 
 The gateway listens on `http://localhost:3000`. Nginx with route-specific rate limiting listens on `http://localhost:8080`.
+
+Compose starts three dedicated Postgres deployments: `auth-postgres`, `seat-postgres`, and `payment-postgres`. Each service receives its own `DATABASE_URL` from `AUTH_DATABASE_URL`, `SEAT_DATABASE_URL`, or `PAYMENT_DATABASE_URL`; the gateway has no database connection.
+
+For direct non-Docker service runs, set `DATABASE_URL` per process to the matching service database instead of using one shared database.
 
 RabbitMQ management UI is available on `http://localhost:15672`.
 
@@ -102,7 +108,13 @@ sequenceDiagram
 
 ## Postgres
 
-The runtime uses Postgres only. Migrations are versioned SQL files in `infra/postgres/migrations`. The initial migration creates separate schemas for `auth`, `seat`, `payment`, and `eventing`.
+The runtime uses Postgres only. Each domain service has its own Postgres container, database, user, volume, and migration mount:
+
+- `auth-postgres` loads `infra/postgres/auth/migrations` and creates only `auth.*`.
+- `seat-postgres` loads `infra/postgres/seat/migrations` and creates `seat.*` plus local `eventing.*`.
+- `payment-postgres` loads `infra/postgres/payment/migrations` and creates `payment.*` plus local `eventing.*`.
+
+Schema-qualified table names are retained inside each service database to keep ownership explicit and minimize service code churn. `eventing.outbox` and `eventing.inbox` are service-local infrastructure tables in the seat and payment databases, so domain writes and outbox/inbox records commit atomically inside the owning service database.
 
 Hot-path constraints and indexes include:
 
